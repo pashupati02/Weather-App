@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'indian_cities.dart';
 
 // --- Entry Point of the App ---
@@ -52,6 +55,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
   // Weather data fetched from the API
   Map<String, dynamic>? _weatherData;
+  List<dynamic>? _forecastData;
 
   // Tracks the loading state for fetching data
   bool _isLoading = false;
@@ -126,6 +130,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
       _isLoading = true;
       _errorMessage = null;
       _weatherData = null;
+      _forecastData = null;
     });
 
     try {
@@ -136,12 +141,17 @@ class _WeatherScreenState extends State<WeatherScreen> {
 
       // Make the HTTP GET request
       final response = await http.get(url);
+      final forecastUrl = Uri.parse(
+        'https://api.openweathermap.org/data/2.5/forecast?q=$_cityName&appid=$_apiKey&units=metric',
+      );
+      final forecastResponse = await http.get(forecastUrl);
 
       // Check if the request was successful
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && forecastResponse.statusCode == 200) {
         // Parse the JSON response and update the state
         setState(() {
           _weatherData = json.decode(response.body);
+          _forecastData = json.decode(forecastResponse.body)['list'];
         });
       } else {
         // If the server returns an error, set an error message
@@ -219,7 +229,10 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 _buildSearchCard(),
                 const SizedBox(height: 20),
                 // --- Weather Information Display ---
-                Expanded(child: _buildWeatherDisplay()),
+                Expanded(child: _buildWeatherDisplay())
+                    .animate()
+                    .fadeIn(duration: 600.ms)
+                    .slideY(begin: 0.5, end: 0.0),
               ],
             ),
           ),
@@ -302,32 +315,6 @@ class _WeatherScreenState extends State<WeatherScreen> {
     );
   }
 
-  /// Builds the loading indicator for city suggestions
-  Widget _buildLoadingSuggestions() {
-    return Card(
-      elevation: 3,
-      margin: const EdgeInsets.only(top: 8.0),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: const Padding(
-        padding: EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-        child: Row(
-          children: [
-            SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-            SizedBox(width: 12),
-            Text(
-              'Searching cities...',
-              style: TextStyle(color: Colors.deepPurple),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   /// Builds the suggestions list widget
   Widget _buildSuggestionsList() {
     return Card(
@@ -383,6 +370,16 @@ class _WeatherScreenState extends State<WeatherScreen> {
       final feelsLike = _weatherData!['main']['feels_like'].toStringAsFixed(1);
       final humidity = _weatherData!['main']['humidity'];
       final windSpeed = _weatherData!['wind']['speed'];
+      final sunrise = DateFormat('h:mm a').format(
+        DateTime.fromMillisecondsSinceEpoch(
+          _weatherData!['sys']['sunrise'] * 1000,
+        ),
+      );
+      final sunset = DateFormat('h:mm a').format(
+        DateTime.fromMillisecondsSinceEpoch(
+          _weatherData!['sys']['sunset'] * 1000,
+        ),
+      );
 
       return SingleChildScrollView(
         child: Column(
@@ -416,37 +413,72 @@ class _WeatherScreenState extends State<WeatherScreen> {
               ),
             ),
             const SizedBox(height: 30),
-            // --- Additional Details Section ---
-            Card(
-              color: Colors.white.withOpacity(0.2),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildWeatherDetailColumn(
-                      'FEELS LIKE',
-                      '$feelsLike°C',
-                      Icons.thermostat,
-                    ),
-                    _buildWeatherDetailColumn(
-                      'HUMIDITY',
-                      '$humidity%',
-                      Icons.water_drop,
-                    ),
-                    _buildWeatherDetailColumn(
-                      'WIND',
-                      '${windSpeed} m/s',
-                      Icons.air,
-                    ),
-                  ],
+            // --- Sunrise and Sunset Times ---
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildWeatherDetailColumn(
+                  'SUNRISE',
+                  sunrise,
+                  Icons.wb_sunny_outlined,
                 ),
-              ),
+                _buildWeatherDetailColumn('SUNSET', sunset, Icons.wb_sunny),
+              ],
             ),
+            const SizedBox(height: 20),
+            // --- Additional Details Section ---
+            ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                    child: Card(
+                      // ignore: deprecated_member_use
+                      color: Colors.white.withOpacity(0.2),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildWeatherDetailColumn(
+                              'FEELS LIKE',
+                              '$feelsLike°C',
+                              Icons.thermostat,
+                            ),
+                            _buildWeatherDetailColumn(
+                              'HUMIDITY',
+                              '$humidity%',
+                              Icons.water_drop,
+                            ),
+                            _buildWeatherDetailColumn(
+                              'WIND',
+                              '${windSpeed} m/s',
+                              Icons.air,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+                .animate()
+                .fadeIn(duration: 600.ms)
+                .move(
+                  begin: const Offset(0, 50),
+                  end: Offset.zero,
+                  curve: Curves.easeOut,
+                )
+                .shimmer(
+                  delay: 800.ms,
+                  duration: 1000.ms,
+                  color: Colors.white.withOpacity(0.1),
+                ),
+            const SizedBox(height: 20),
+            // --- 5-Day Forecast ---
+            _buildForecast(),
           ],
         ),
       );
@@ -476,6 +508,86 @@ class _WeatherScreenState extends State<WeatherScreen> {
           ),
         ),
         Text(title, style: const TextStyle(color: Colors.white70)),
+      ],
+    );
+  }
+
+  /// Builds the 5-day forecast section.
+  Widget _buildForecast() {
+    if (_forecastData == null) {
+      return const SizedBox.shrink();
+    }
+
+    // Group forecast by day
+    final Map<String, List<dynamic>> dailyForecast = {};
+    for (var forecast in _forecastData!) {
+      final day = DateFormat(
+        'EEEE',
+      ).format(DateTime.fromMillisecondsSinceEpoch(forecast['dt'] * 1000));
+      if (!dailyForecast.containsKey(day)) {
+        dailyForecast[day] = [];
+      }
+      dailyForecast[day]!.add(forecast);
+    }
+
+    // Get the next 5 days
+    final next5Days = dailyForecast.keys.take(5).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '5-Day Forecast',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 10),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: next5Days.map((day) {
+              final dayForecast = dailyForecast[day]!.first;
+              final temp = dayForecast['main']['temp'].toStringAsFixed(1);
+              final mainCondition = dayForecast['weather'][0]['main'];
+
+              return Card(
+                color: Colors.white.withOpacity(0.2),
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    children: [
+                      Text(
+                        day,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Icon(
+                        _getWeatherIcon(mainCondition),
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '$temp°C',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ).animate().fadeIn(duration: 800.ms);
+            }).toList(),
+          ),
+        ),
       ],
     );
   }
