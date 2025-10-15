@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'indian_cities.dart';
 
 // --- Entry Point of the App ---
 void main() {
@@ -48,7 +48,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   final TextEditingController _cityController = TextEditingController();
 
   // The city currently being displayed
-  String _cityName = 'London';
+  String _cityName = 'Delhi';
 
   // Weather data fetched from the API
   Map<String, dynamic>? _weatherData;
@@ -59,59 +59,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
   // Stores any error messages
   String? _errorMessage;
 
-  // Complete list of top Indian cities for local search
-  final List<String> _allIndianCities = [
-    'Mumbai, Maharashtra',
-    'Delhi, Delhi',
-    'Bangalore, Karnataka',
-    'Hyderabad, Telangana',
-    'Ahmedabad, Gujarat',
-    'Chennai, Tamil Nadu',
-    'Kolkata, West Bengal',
-    'Pune, Maharashtra',
-    'Jaipur, Rajasthan',
-    'Surat, Gujarat',
-    'Lucknow, Uttar Pradesh',
-    'Kanpur, Uttar Pradesh',
-    'Nagpur, Maharashtra',
-    'Indore, Madhya Pradesh',
-    'Thane, Maharashtra',
-    'Bhopal, Madhya Pradesh',
-    'Visakhapatnam, Andhra Pradesh',
-    'Patna, Bihar',
-    'Vadodara, Gujarat',
-    'Ghaziabad, Uttar Pradesh',
-    'Ludhiana, Punjab',
-    'Agra, Uttar Pradesh',
-    'Nashik, Maharashtra',
-    'Faridabad, Haryana',
-    'Meerut, Uttar Pradesh',
-    'Rajkot, Gujarat',
-    'Kalyan-Dombivli, Maharashtra',
-    'Vasai-Virar, Maharashtra',
-    'Varanasi, Uttar Pradesh',
-    'Srinagar, Jammu and Kashmir',
-    'Aurangabad, Maharashtra',
-    'Dhanbad, Jharkhand',
-    'Amritsar, Punjab',
-    'Navi Mumbai, Maharashtra',
-    'Allahabad, Uttar Pradesh',
-    'Ranchi, Jharkhand',
-    'Howrah, West Bengal',
-    'Coimbatore, Tamil Nadu',
-    'Jabalpur, Madhya Pradesh',
-    'Gwalior, Madhya Pradesh',
-    'Vijayawada, Andhra Pradesh',
-    'Jodhpur, Rajasthan',
-    'Madurai, Tamil Nadu',
-    'Raipur, Chhattisgarh',
-    'Kota, Rajasthan',
-    'Guwahati, Assam',
-    'Chandigarh, Chandigarh',
-    'Solapur, Maharashtra',
-    'Hubli-Dharwad, Karnataka',
-    'Bareilly, Uttar Pradesh',
-  ];
+  final List<String> _allIndianCities = indianCities;
 
   // Filtered list of city suggestions based on search
   List<String> _citySuggestions = [];
