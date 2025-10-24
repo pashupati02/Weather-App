@@ -455,7 +455,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                             ),
                             _buildWeatherDetailColumn(
                               'WIND',
-                              '${windSpeed} m/s',
+                              '$windSpeed m/s',
                               Icons.air,
                             ),
                           ],
@@ -474,6 +474,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
                 .shimmer(
                   delay: 800.ms,
                   duration: 1000.ms,
+                  // ignore: deprecated_member_use
                   color: Colors.white.withOpacity(0.1),
                 ),
             const SizedBox(height: 20),
@@ -554,6 +555,7 @@ class _WeatherScreenState extends State<WeatherScreen> {
               final mainCondition = dayForecast['weather'][0]['main'];
 
               return Card(
+                // ignore: deprecated_member_use
                 color: Colors.white.withOpacity(0.2),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
